@@ -1,6 +1,7 @@
 from room import Room
 from player import Player
 from world import World
+from util import Stack, Queue
 
 import random
 
@@ -21,7 +22,101 @@ player = Player("Name", world.startingRoom)
 
 
 # FILL THIS IN
-traversalPath = ['n', 's']
+traversalPath = []
+# moves = Stack()
+graph = {}
+print(player.currentRoom.getExits())
+print(player.currentRoom.id)
+
+def oppositeMove(move):
+    if move == 'n':
+        return 's'
+    elif move == 's':
+        return 'n'
+    elif move =='w':
+        return 'e'
+    elif move == 'e':
+        return 'w'
+    elif move == 0:
+        return '?'
+
+def randMove(id):
+    nextMoves = []
+    for exit in currentRoom.items():
+        if exit[1] == '?':
+            nextMoves.append(exit[0])
+    if len(nextMoves) > 0:
+        return nextMoves[random.randint(0,len(nextMoves)-1)]
+    else:
+        return None
+
+def addRoomToGraph():
+    if player.currentRoom.id not in graph:
+            roomExits = {}
+            for exit in player.currentRoom.getExits():
+                roomExits[exit] = '?'
+            graph[player.currentRoom.id] = roomExits
+
+#move is from room1 to room2
+def updateRooms(roomID1, roomID2, move):
+    graph[roomID1][move] = roomID2
+    graph[roomID2][oppositeMove(move)] = roomID1
+
+def executePath(path):
+    for roomID in path:
+        for dir, exit in graph[player.currentRoom.id].items():
+            if exit == roomID:
+                player.travel(dir)
+                traversalPath.append(dir)
+                break
+
+
+def traverseBack():
+    q = Queue()
+    roomID = player.currentRoom.id
+    visited = [roomID]
+    exits = graph[roomID]
+    for exit in exits.items():
+        q.enqueue([exit[1]])
+
+    while True:
+        temp = q.dequeue()
+        visited.append(temp[-1])
+        roomID = temp[-1]
+        exits = graph[roomID]
+        if '?' in exits.values():
+            executePath(temp)
+            return
+        for exit in exits.items():
+            if exit[1]  not in visited:
+                q.enqueue([*temp, exit[1]])
+
+        
+
+
+
+
+
+addRoomToGraph() #for the first room
+while len(graph) < len(roomGraph):
+    roomID = player.currentRoom.id
+    currentRoom = graph[roomID]
+    nextMove = randMove(roomID)
+    if nextMove == None:
+        traverseBack()
+        continue
+    traversalPath.append(nextMove)
+    player.travel(nextMove)
+    addRoomToGraph()
+    updateRooms(roomID, player.currentRoom.id, nextMove)
+print("success")
+    
+
+
+
+
+
+
 
 
 # TRAVERSAL TEST
@@ -48,5 +143,6 @@ else:
 #     cmds = input("-> ").lower().split(" ")
 #     if cmds[0] in ["n", "s", "e", "w"]:
 #         player.travel(cmds[0], True)
+#         print(player.currentRoom.id)
 #     else:
 #         print("I did not understand that command.")
